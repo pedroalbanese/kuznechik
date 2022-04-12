@@ -8,7 +8,6 @@ import (
 )
 
 var CipherInitialized = false
-
 const BlockSize = 16
 
 var Pi_table = [256]uint8{
@@ -84,16 +83,12 @@ var Pi_inverse_table = [256]uint8{
 }
 
 var L_vector = [16]uint8{0x94, 0x20, 0x85, 0x10, 0xC2, 0xC0, 0x01, 0xFB, 0x01, 0xC0, 0xC2, 0x10, 0x85, 0x20, 0x94, 0x01}
-
 var LS_enc_lookup [16][256][16]uint8
-
 var L_inv_lookup [16][256][16]uint8
-
 var SL_dec_lookup [16][256][16]uint8
 
 func GF2_mul(x, y uint8) uint8 {
 	var z uint8
-
 	z = 0
 	for y != 0 {
 		if y&1 == 1 {
@@ -106,15 +101,12 @@ func GF2_mul(x, y uint8) uint8 {
 		}
 		y = y >> 1
 	}
-
 	return z
 }
 
 func L(block [16]uint8) [16]uint8 {
-
 	var i, j int
 	var x uint8
-
 	for j = 0; j < 16; j++ {
 
 		x = block[15]
@@ -125,7 +117,6 @@ func L(block [16]uint8) [16]uint8 {
 		}
 		block[0] = x
 	}
-
 	return block
 }
 
@@ -141,7 +132,6 @@ func L_inv(block [16]uint8) [16]uint8 {
 		}
 		block[15] = x
 	}
-
 	return block
 }
 
@@ -159,7 +149,6 @@ func StretchKey(key [32]uint8) [10][16]uint8 {
 	rkeys[1] = y
 
 	for i = 1; i <= 32; i++ {
-
 		for k = range C {
 			C[k] = 0
 		}
@@ -173,10 +162,8 @@ func StretchKey(key [32]uint8) [10][16]uint8 {
 		for k = range z {
 			z[k] = z[k] ^ y[k]
 		}
-
 		y = x
 		x = z
-
 		if i%8 == 0 {
 			rkeys[(i >> 2)] = x
 			rkeys[(i>>2)+1] = y
@@ -187,7 +174,6 @@ func StretchKey(key [32]uint8) [10][16]uint8 {
 
 func GetDecryptRoundKeys(rkeys [10][16]uint8) [10][16]uint8 {
 	var rkeys_L [10][16]uint8
-
 	for k := 1; k < 10; k++ {
 		rkeys_L[k] = L_inv(rkeys[k])
 	}
@@ -196,17 +182,14 @@ func GetDecryptRoundKeys(rkeys [10][16]uint8) [10][16]uint8 {
 }
 
 func Encrypt(key [32]uint8, block [16]uint8) [16]uint8 {
-
 	var ct [16]uint8
-
 	var rkeys [10][16]uint8
-
+	
 	if !CipherInitialized {
 		InitCipher()
 	}
 
 	rkeys = StretchKey(key)
-
 	ct = Encrypt_K(rkeys, block)
 
 	return ct
@@ -220,7 +203,6 @@ func Encrypt_K(rkeys [10][16]uint8, block [16]uint8) [16]uint8 {
 	ct = block
 
 	for i = 0; i < 9; i++ {
-
 		*(*uint64)(unsafe.Pointer(&ct[0])) = *(*uint64)(unsafe.Pointer(&ct[0])) ^ *(*uint64)(unsafe.Pointer(&rkeys[i][0]))
 		*(*uint64)(unsafe.Pointer(&ct[8])) = *(*uint64)(unsafe.Pointer(&ct[8])) ^ *(*uint64)(unsafe.Pointer(&rkeys[i][8]))
 
@@ -228,14 +210,12 @@ func Encrypt_K(rkeys [10][16]uint8, block [16]uint8) [16]uint8 {
 			r[k] = LS_enc_lookup[0][ct[0]][k]
 		}
 		for j = 1; j <= 15; j++ {
-
 			*(*uint64)(unsafe.Pointer(&r[0])) = *(*uint64)(unsafe.Pointer(&r[0])) ^ *(*uint64)(unsafe.Pointer(&LS_enc_lookup[j][ct[j]][0]))
 			*(*uint64)(unsafe.Pointer(&r[8])) = *(*uint64)(unsafe.Pointer(&r[8])) ^ *(*uint64)(unsafe.Pointer(&LS_enc_lookup[j][ct[j]][8]))
 
 		}
 		ct = r
 	}
-
 	*(*uint64)(unsafe.Pointer(&ct[0])) = *(*uint64)(unsafe.Pointer(&ct[0])) ^ *(*uint64)(unsafe.Pointer(&rkeys[9][0]))
 	*(*uint64)(unsafe.Pointer(&ct[8])) = *(*uint64)(unsafe.Pointer(&ct[8])) ^ *(*uint64)(unsafe.Pointer(&rkeys[9][8]))
 
@@ -244,11 +224,9 @@ func Encrypt_K(rkeys [10][16]uint8, block [16]uint8) [16]uint8 {
 }
 
 func Decrypt_L(key [32]uint8, block [16]uint8) [16]uint8 {
-
 	var i, j, k int
 	var pt, r [16]uint8
 	var rkeys [10][16]uint8
-
 	rkeys = StretchKey(key)
 	pt = block
 
@@ -256,7 +234,6 @@ func Decrypt_L(key [32]uint8, block [16]uint8) [16]uint8 {
 		for k = range pt {
 			pt[k] = pt[k] ^ rkeys[i][k]
 		}
-
 		for k = range r {
 			r[k] = L_inv_lookup[0][pt[0]][k]
 		}
@@ -277,25 +254,19 @@ func Decrypt_L(key [32]uint8, block [16]uint8) [16]uint8 {
 }
 
 func Decrypt(key [32]uint8, block [16]uint8) [16]uint8 {
-
 	var rkeys [10][16]uint8
-
 	if !CipherInitialized {
 		InitCipher()
 	}
-
 	rkeys = GetDecryptRoundKeys(StretchKey(key))
 	pt := Decrypt_K(rkeys, block)
 	return pt
 }
 
 func Decrypt_K(rkeys [10][16]uint8, block [16]uint8) [16]uint8 {
-
 	var i, j, k int
 	var pt, r [16]uint8
-
 	pt = block
-
 	for k = range r {
 		r[k] = L_inv_lookup[0][pt[0]][k]
 	}
@@ -306,10 +277,8 @@ func Decrypt_K(rkeys [10][16]uint8, block [16]uint8) [16]uint8 {
 	pt = r
 
 	for i = 9; i > 1; i-- {
-
 		*(*uint64)(unsafe.Pointer(&pt[0])) = *(*uint64)(unsafe.Pointer(&pt[0])) ^ *(*uint64)(unsafe.Pointer(&rkeys[i][0]))
 		*(*uint64)(unsafe.Pointer(&pt[8])) = *(*uint64)(unsafe.Pointer(&pt[8])) ^ *(*uint64)(unsafe.Pointer(&rkeys[i][8]))
-
 		for k = range r {
 			r[k] = SL_dec_lookup[0][pt[0]][k]
 		}
@@ -319,55 +288,42 @@ func Decrypt_K(rkeys [10][16]uint8, block [16]uint8) [16]uint8 {
 		}
 		pt = r
 	}
-
 	*(*uint64)(unsafe.Pointer(&pt[0])) = *(*uint64)(unsafe.Pointer(&pt[0])) ^ *(*uint64)(unsafe.Pointer(&rkeys[1][0]))
 	*(*uint64)(unsafe.Pointer(&pt[8])) = *(*uint64)(unsafe.Pointer(&pt[8])) ^ *(*uint64)(unsafe.Pointer(&rkeys[1][8]))
-
 	for k = range pt {
 		pt[k] = Pi_inverse_table[pt[k]]
 	}
-
 	*(*uint64)(unsafe.Pointer(&pt[0])) = *(*uint64)(unsafe.Pointer(&pt[0])) ^ *(*uint64)(unsafe.Pointer(&rkeys[0][0]))
 	*(*uint64)(unsafe.Pointer(&pt[8])) = *(*uint64)(unsafe.Pointer(&pt[8])) ^ *(*uint64)(unsafe.Pointer(&rkeys[0][8]))
-
 	return pt
 }
 
 func InitCipher() {
 	var i, j, k int
 	var x [16]uint8
-
 	if CipherInitialized {
 		return
 	}
-
 	for i = 0; i < 16; i++ {
 		for j = 0; j < 256; j++ {
-
 			for k = range x {
 				x[k] = 0
 			}
 			x[i] = Pi_table[j]
 			x = L(x)
-
 			LS_enc_lookup[i][j] = x
-
 			for k = range x {
 				x[k] = 0
 			}
 			x[i] = uint8(j)
 			x = L_inv(x)
-
 			L_inv_lookup[i][j] = x
-
 			for k = range x {
 				x[k] = 0
 			}
 			x[i] = Pi_inverse_table[j]
 			x = L_inv(x)
-
 			SL_dec_lookup[i][j] = x
-
 		}
 	}
 	CipherInitialized = true
@@ -387,11 +343,9 @@ func (k KeySizeError) Error() string {
 
 func NewCipher(key []byte) (cipher.Block, error) {
 	var t_key [32]uint8
-
 	if len(key) != 32 {
 		return nil, KeySizeError(len(key))
 	}
-
 	c := *(new(kuznecCipher))
 	copy(t_key[:], key[:32])
 
@@ -400,7 +354,6 @@ func NewCipher(key []byte) (cipher.Block, error) {
 	if !CipherInitialized {
 		InitCipher()
 	}
-
 	return &c, nil
 }
 
@@ -410,7 +363,6 @@ func (c *kuznecCipher) BlockSize() int {
 
 func (c *kuznecCipher) Encrypt(dst, src []byte) {
 	var ct_block [16]uint8
-
 	if len(src) < BlockSize {
 		panic("Kuznyechik cipher: input length less than full block!")
 	}
@@ -418,7 +370,6 @@ func (c *kuznecCipher) Encrypt(dst, src []byte) {
 		panic("Kuznyechik cipher: output length less than full block!")
 	}
 	copy(ct_block[:], src[:16])
-
 	ct_block = Encrypt_K(c.enc_keys, ct_block)
 	copy(dst, ct_block[:])
 
@@ -426,14 +377,12 @@ func (c *kuznecCipher) Encrypt(dst, src []byte) {
 
 func (c *kuznecCipher) Decrypt(dst, src []byte) {
 	var pt_block [16]uint8
-
 	if len(src) < BlockSize {
 		panic("Kuznyechik cipher: input length less than full block!")
 	}
 	if len(dst) < BlockSize {
 		panic("Kuznyechik cipher: output length less than full block!")
 	}
-
 	copy(pt_block[:], src[:16])
 	pt_block = Decrypt_K(c.dec_keys, pt_block)
 	copy(dst, pt_block[:])
