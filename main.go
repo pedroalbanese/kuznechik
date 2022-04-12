@@ -365,7 +365,6 @@ func (c *kuznecCipher) Encrypt(dst, src []byte) {
 	copy(ct_block[:], src[:16])
 	ct_block = Encrypt_K(c.enc_keys, ct_block)
 	copy(dst, ct_block[:])
-
 }
 
 func (c *kuznecCipher) Decrypt(dst, src []byte) {
@@ -379,5 +378,4 @@ func (c *kuznecCipher) Decrypt(dst, src []byte) {
 	copy(pt_block[:], src[:16])
 	pt_block = Decrypt_K(c.dec_keys, pt_block)
 	copy(dst, pt_block[:])
-
 }
