@@ -1,3 +1,4 @@
+// GOST 34.12-2015 128-bit Кузнечик (Kuznechik) block cipher.
 package kuznechik
 
 import (
