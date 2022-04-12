@@ -11,7 +11,6 @@ var CipherInitialized = false
 const BlockSize = 16
 
 var Pi_table = [256]uint8{
-
 	0xFC, 0xEE, 0xDD, 0x11, 0xCF, 0x6E, 0x31, 0x16,
 	0xFB, 0xC4, 0xFA, 0xDA, 0x23, 0xC5, 0x04, 0x4D,
 	0xE9, 0x77, 0xF0, 0xDB, 0x93, 0x2E, 0x99, 0xBA,
@@ -47,7 +46,6 @@ var Pi_table = [256]uint8{
 }
 
 var Pi_inverse_table = [256]uint8{
-
 	0xA5, 0x2D, 0x32, 0x8F, 0x0E, 0x30, 0x38, 0xC0,
 	0x54, 0xE6, 0x9E, 0x39, 0x55, 0x7E, 0x52, 0x91,
 	0x64, 0x03, 0x57, 0x5A, 0x1C, 0x60, 0x07, 0x18,
@@ -196,12 +194,9 @@ func Encrypt(key [32]uint8, block [16]uint8) [16]uint8 {
 }
 
 func Encrypt_K(rkeys [10][16]uint8, block [16]uint8) [16]uint8 {
-
 	var i, j, k int
 	var ct, r [16]uint8
-
 	ct = block
-
 	for i = 0; i < 9; i++ {
 		*(*uint64)(unsafe.Pointer(&ct[0])) = *(*uint64)(unsafe.Pointer(&ct[0])) ^ *(*uint64)(unsafe.Pointer(&rkeys[i][0]))
 		*(*uint64)(unsafe.Pointer(&ct[8])) = *(*uint64)(unsafe.Pointer(&ct[8])) ^ *(*uint64)(unsafe.Pointer(&rkeys[i][8]))
@@ -218,9 +213,7 @@ func Encrypt_K(rkeys [10][16]uint8, block [16]uint8) [16]uint8 {
 	}
 	*(*uint64)(unsafe.Pointer(&ct[0])) = *(*uint64)(unsafe.Pointer(&ct[0])) ^ *(*uint64)(unsafe.Pointer(&rkeys[9][0]))
 	*(*uint64)(unsafe.Pointer(&ct[8])) = *(*uint64)(unsafe.Pointer(&ct[8])) ^ *(*uint64)(unsafe.Pointer(&rkeys[9][8]))
-
 	return ct
-
 }
 
 func Decrypt_L(key [32]uint8, block [16]uint8) [16]uint8 {
