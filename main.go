@@ -106,7 +106,6 @@ func L(block [16]uint8) [16]uint8 {
 	var i, j int
 	var x uint8
 	for j = 0; j < 16; j++ {
-
 		x = block[15]
 		for i = 14; i >= 0; i-- {
 			block[i+1] = block[i]
