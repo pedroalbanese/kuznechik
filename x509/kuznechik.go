@@ -33,7 +33,7 @@ type rfc1423Algo struct {
 // block. The ivSize numbers were taken from the OpenSSL source.
 var rfc1423Algos = []rfc1423Algo{{
 	cipher:     PEMCipherGOST,
-	name:       "KUZNECHIK-CBC",
+	name:       "GRASSHOPPER-CBC",
 	cipherFunc: kuznechik.NewCipher,
 	keySize:    32,
 	blockSize:  kuznechik.BlockSize,
